@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArduinoServiceTest", "ArduinoServiceTest\ArduinoServiceTest.csproj", "{A90B208F-EF2F-4787-9359-7CADCDE5C16E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Arduino", "..\..\Libraries\Arduino\Arduino\Arduino.csproj", "{E2DB4222-B095-4375-8279-445D63BF4F68}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A90B208F-EF2F-4787-9359-7CADCDE5C16E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A90B208F-EF2F-4787-9359-7CADCDE5C16E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A90B208F-EF2F-4787-9359-7CADCDE5C16E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A90B208F-EF2F-4787-9359-7CADCDE5C16E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E2DB4222-B095-4375-8279-445D63BF4F68}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E2DB4222-B095-4375-8279-445D63BF4F68}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E2DB4222-B095-4375-8279-445D63BF4F68}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E2DB4222-B095-4375-8279-445D63BF4F68}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
