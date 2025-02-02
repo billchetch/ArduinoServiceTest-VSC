@@ -11,7 +11,7 @@ Description=Chetch Arduino Test Service
 
 [Service]
 Type=simple
-ExecStart=/home/pi/.dotnet/dotnet /home/pi/Documents/VisualStudioProjects/Tests/ArduinoTestService/ArduinoTestService/bin/Debug/net9.0/ArduinoTestService.dll
+ExecStart=/home/pi/.dotnet/dotnet /home/pi/Documents/VisualStudioProjects/Tests/ArduinoServiceTest/ArduinoServiceTest/bin/Debug/net9.0/ArduinoServiceTest.dll
 
 [Install]
 WantedBy=multi-user.target
