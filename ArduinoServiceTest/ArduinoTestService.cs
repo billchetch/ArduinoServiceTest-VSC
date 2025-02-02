@@ -14,12 +14,24 @@ public class ArduinoServiceTest : ArduinoService<ArduinoServiceTest>
     protected override Task Execute(CancellationToken stoppingToken)
     {
         ArduinoBoard board = new ArduinoBoard("first", 0x7523, 9600); //, Frame.FrameSchema.SMALL_NO_CHECKSUM);
-        /*board.Ready += (sender, ready) => {
+        board.Ready += (sender, ready) => {
             Console.WriteLine("Board is ready: {0}", ready);
-        };*/
+            if(ready)
+            {
+                Console.WriteLine("Board millis: {0}", board. Millis);
+                Console.WriteLine("Devices: {0}", board. DeviceCount);
+                Console.WriteLine("Free memory: {0}", board.FreeMemory);
+            }
+        };
 
-        var device = new Ticker("testDevice01");
-        board.AddDevice(device);
+        var ticker = new Ticker(10, "testDevice01");
+        //board.AddDevice(ticker);
+
+        var sd = new SwitchDevice(11, "gland1");
+        sd.Switched += (sender, pinState) => {
+            Console.WriteLine("Switch {0} has pin state {1}", sd.Name, pinState);
+        };
+        board.AddDevice(sd);
 
         AddBoard(board);
 
