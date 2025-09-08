@@ -8,9 +8,14 @@ namespace ArduinoServiceTest;
 
 public class CANTestService : CANBusService<CANTestService>
 {
+    public const int REMOTE_NODES = 3;
+    public CANBusMonitor BusMonitor { get; }
+
     public CANTestService(ILogger<CANTestService> Logger) : base(Logger)
     {
-        
+        BusMonitor = new CANBusMonitor(REMOTE_NODES);
+
+        AddBusMonitor(BusMonitor);
     }
 
     #region Service Lifecycle
