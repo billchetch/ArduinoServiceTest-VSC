@@ -7,13 +7,7 @@ public class ArduinoServiceTest : ArduinoService<ArduinoServiceTest>
 {
     public ArduinoServiceTest(ILogger<ArduinoServiceTest> Logger) : base(Logger)
     {
-
-    }
-
-    #region Service Lifecycle
-    protected override Task Execute(CancellationToken stoppingToken)
-    {
-        ArduinoBoard board = new ArduinoBoard("first", 0x7523, 9600); //, Frame.FrameSchema.SMALL_NO_CHECKSUM);
+        ArduinoBoard board = new ArduinoBoard("test"); //, Frame.FrameSchema.SMALL_NO_CHECKSUM);
         board.Ready += (sender, ready) => {
             Console.WriteLine("Board is ready: {0}", ready);
             if(ready)
@@ -24,16 +18,22 @@ public class ArduinoServiceTest : ArduinoService<ArduinoServiceTest>
             }
         };
 
-        var ticker = new Ticker(10, "testDevice01");
+        var ticker = new Ticker(10, "ticker1");
         //board.AddDevice(ticker);
 
-        var sd = new SwitchDevice(11, "gland1");
+        var sd = new PassiveSwitch("psw1");
         sd.Switched += (sender, pinState) => {
-            Console.WriteLine("Switch {0} has pin state {1}", sd.Name, pinState);
+            Console.WriteLine("Switch {0} has pin state {1}", sd.SID, pinState);
         };
         board.AddDevice(sd);
 
         AddBoard(board);
+    }
+
+    #region Service Lifecycle
+    protected override Task Execute(CancellationToken stoppingToken)
+    {
+        
 
         return base.Execute(stoppingToken);
     }
