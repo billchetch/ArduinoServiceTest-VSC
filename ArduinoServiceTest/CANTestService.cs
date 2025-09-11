@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using Chetch.Arduino;
 using Chetch.Arduino.Boards;
 using Chetch.Arduino.Devices;
@@ -10,7 +11,96 @@ namespace ArduinoServiceTest;
 public class CANTestService : CANBusService<CANTestService>
 {
     public const int REMOTE_NODES = 3;
-    public CANBusMonitor BusMonitor { get; }
+
+    public class ReportData
+    {
+        public byte NodeID = 0;
+
+        byte MaxDiffNode = 0;
+        byte MaxDiff = 0;
+        byte MaxIdleNode = 0;
+        UInt32 MaxIdle = 0;
+
+        byte DiffErrorNode = 0;
+        byte DiffError = 0;
+        byte LoopTime = 0;
+        UInt32 MaxLoopTime = 0;
+
+        UInt32 SentMessages = 0;
+        UInt32 ReceivedMessages = 0;
+
+        int tagCount = 0;
+
+        public DateTime CompletedOn;
+
+        public bool Complete => tagCount == 3;
+
+        public ReportData(byte nodeID)
+        {
+            NodeID = nodeID;
+        }
+
+        public bool Read(ArduinoMessage msg)
+        {
+            if (Complete) return false;
+
+            if (msg.Tag == 1)
+            {
+                MaxDiffNode = msg.Get<byte>(0);
+                MaxDiff = msg.Get<byte>(1);
+                MaxIdleNode = msg.Get<byte>(2);
+                MaxIdle = msg.Get<UInt32>(3);
+                tagCount++;
+            }
+            else if (msg.Tag == 2)
+            {
+                DiffErrorNode = msg.Get<byte>(0);
+                DiffError = msg.Get<byte>(1);
+                LoopTime = msg.Get<byte>(2);
+                MaxLoopTime = msg.Get<UInt32>(3);
+
+                tagCount++;
+            }
+            else if (msg.Tag == 3)
+            {
+                SentMessages = msg.Get<UInt32>(0);
+                ReceivedMessages = msg.Get<UInt32>(1);
+            }
+
+            if (Complete)
+            {
+                CompletedOn = DateTime.Now;
+            }
+            return true;
+        }
+
+        public void Clear()
+        {
+            tagCount = 0;
+            MaxDiffNode = 0;
+        }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendFormat("Report for Node {0} @ {1}", NodeID, CompletedOn.ToString("s"));
+            sb.AppendLine();
+            sb.AppendFormat(" - MaxDiff: Node {0} -> {1}", MaxDiffNode, MaxDiff);
+            sb.AppendLine();
+            sb.AppendFormat(" - MaxIdle: Node {0} -> {1}", MaxIdleNode, MaxIdle);
+            sb.AppendLine();
+            sb.AppendFormat(" - DiffError: Node {0} -> {1}", DiffErrorNode, DiffError);
+            sb.AppendLine();
+            sb.AppendFormat(" - Loop: Last={0} Max={1}", LoopTime, MaxLoopTime);
+            sb.AppendLine();
+            sb.AppendFormat(" - Sent/Received: {0} {1}", SentMessages, ReceivedMessages);
+            sb.AppendLine();
+
+            return sb.ToString();
+        }
+    }
+
+    public CANBusMonitor BusMonitor { get; } //For easy access
 
     public CANTestService(ILogger<CANTestService> Logger) : base(Logger)
     {
