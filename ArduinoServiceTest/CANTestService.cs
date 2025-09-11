@@ -10,6 +10,8 @@ namespace ArduinoServiceTest;
 
 public class CANTestService : CANBusService<CANTestService>
 {
+    public const String COMMAND_SHOW_LOG = "show-log";
+
     public const int REMOTE_NODES = 3;
 
     public class ReportData
@@ -122,6 +124,7 @@ public class CANTestService : CANBusService<CANTestService>
     #region Client issued Command handling
     protected override void AddCommands()
     {
+        AddCommand(COMMAND_SHOW_LOG, "Show <n?> items from log, if no number is given will show last item");
         base.AddCommands();
     }
 
