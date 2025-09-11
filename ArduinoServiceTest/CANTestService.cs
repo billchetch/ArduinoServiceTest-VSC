@@ -101,6 +101,20 @@ public class CANTestService : CANBusService<CANTestService>
 
             return sb.ToString();
         }
+
+        public String ToString(String sw)
+        {
+            StringBuilder sb = new StringBuilder();
+            switch (sw)
+            {
+                case "s":
+                case "S":
+
+                    return sb.ToString();
+            }
+
+            return String.Empty;
+        }
     }
 
     public CANBusMonitor BusMonitor { get; } //For easy access
@@ -130,7 +144,7 @@ public class CANTestService : CANBusService<CANTestService>
                     rd.Read(msg);
                     if (rd.Complete)
                     {
-                        Console.WriteLine(rd.ToString());
+                        Console.WriteLine(rd.ToString("s"));
                         reportData.Remove(rd.NodeID);
                         log.Add(rd);
                     }
@@ -166,7 +180,14 @@ public class CANTestService : CANBusService<CANTestService>
         switch (command.Command)
         {
             case COMMAND_SHOW_LOG:
-
+                int n = arguments.Count > 0 ? System.Convert.ToInt32(arguments[0].ToString()) : 1;
+                int c = 0;
+                foreach (var rd in log)
+                {
+                    response.AddValue("E" + c, rd.ToString());
+                    c++;
+                    if (c == n) break;
+                }
                 return true;
 
             default:
@@ -177,6 +198,7 @@ public class CANTestService : CANBusService<CANTestService>
     protected override void PopulateStatusResponse(Message response)
     {
         StatusDetails["MasterNode"] = "Todo";
+        StatusDetails["Log"] = String.Format("Contains {0} entries", log.Count);
         base.PopulateStatusResponse(response);
     }
     #endregion
