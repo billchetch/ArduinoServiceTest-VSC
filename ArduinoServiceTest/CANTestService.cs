@@ -5,6 +5,7 @@ using Chetch.Arduino.Boards;
 using Chetch.Arduino.Devices;
 using Chetch.Arduino.Services;
 using Chetch.Messaging;
+using Chetch.Utilities;
 
 namespace ArduinoServiceTest;
 
@@ -104,24 +105,56 @@ public class CANTestService : CANBusService<CANTestService>
 
     public CANBusMonitor BusMonitor { get; } //For easy access
 
+    RingBuffer<ReportData> log = new RingBuffer<ReportData>(100);
+    Dictionary<byte, ReportData> reportData = new Dictionary<byte, ReportData>();
+
     public CANTestService(ILogger<CANTestService> Logger) : base(Logger)
     {
         BusMonitor = new CANBusMonitor(REMOTE_NODES);
 
+        //capture messages and add them to the log
+        BusMonitor.BusMessageReceived += (sender, eargs) =>
+        {
+            var msg = eargs.Message;
+
+            //Console.WriteLine("Bus message node {0} type {1} tag {2}", eargs.NodeID, eargs.Message.Type, eargs.Message.Tag);
+            if (msg.Type == MessageType.INFO)
+            {
+                try
+                {
+                    if (!reportData.ContainsKey(eargs.NodeID))
+                    {
+                        reportData[eargs.NodeID] = new ReportData(eargs.NodeID);
+                    }
+                    var rd = reportData[eargs.NodeID];
+                    rd.Read(msg);
+                    if (rd.Complete)
+                    {
+                        Console.WriteLine(rd.ToString());
+                        reportData.Remove(rd.NodeID);
+                        log.Add(rd);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                }
+            }
+        };
+
+        //Add the bus monitor to the service
         AddBusMonitor(BusMonitor);
     }
 
     #region Service Lifecycle
     protected override Task Execute(CancellationToken stoppingToken)
     {
-
-
         return base.Execute(stoppingToken);
     }
     #endregion
 
 
-    #region Client issued Command handling
+    #region Client issued Command handling and general Messaging
     protected override void AddCommands()
     {
         AddCommand(COMMAND_SHOW_LOG, "Show <n?> items from log, if no number is given will show last item");
@@ -130,11 +163,21 @@ public class CANTestService : CANBusService<CANTestService>
 
     protected override bool HandleCommandReceived(ServiceCommand command, List<object> arguments, Message response)
     {
-        switch (command)
+        switch (command.Command)
         {
+            case COMMAND_SHOW_LOG:
+
+                return true;
+
             default:
                 return base.HandleCommandReceived(command, arguments, response);
         }
+    }
+
+    protected override void PopulateStatusResponse(Message response)
+    {
+        StatusDetails["MasterNode"] = "Todo";
+        base.PopulateStatusResponse(response);
     }
     #endregion
 }
