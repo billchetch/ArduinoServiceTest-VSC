@@ -119,7 +119,7 @@ public class CANTestService : CANBusService<CANTestService>
 
     public CANBusMonitor BusMonitor { get; } //For easy access
 
-    RingBuffer<ReportData> log = new RingBuffer<ReportData>(100);
+    RingBuffer<ReportData> log = new RingBuffer<ReportData>(100, true);
     Dictionary<byte, ReportData> reportData = new Dictionary<byte, ReportData>();
 
     public CANTestService(ILogger<CANTestService> Logger) : base(Logger)
