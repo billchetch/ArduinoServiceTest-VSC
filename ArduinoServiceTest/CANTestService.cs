@@ -52,11 +52,9 @@ public class CANTestService : CANBusService<CANTestService>
         UInt32 SentMessages = 0;
         UInt32 ReceivedMessages = 0;
 
-        int tagCount = 0;
-
         public DateTime CompletedOn;
 
-        public bool Complete => tagCount == 6;
+        public bool Complete { get; internal set; } = false;
 
         public ReportData(byte nodeID)
         {
@@ -71,44 +69,39 @@ public class CANTestService : CANBusService<CANTestService>
             {
                 MaxDiffNode = msg.Get<byte>(0);
                 MaxDiff = msg.Get<UInt32>(1);
-                tagCount++;
             }
             else if (msg.Tag == 2)
             {
                 MaxIdleNode = msg.Get<byte>(0);
                 MaxIdle = msg.Get<UInt32>(1);
-                tagCount++;
             }
             else if (msg.Tag == 3)
             {
                 TXErrorCount = msg.Get<byte>(0);
                 RXErrorCount = msg.Get<byte>(1);
                 MsgErrorCount = msg.Get<byte>(2);
-                tagCount++;
             }
             else if (msg.Tag == 4)
             {
-
-                tagCount++;
+                DiffEqualErrorNode = msg.Get<byte>(0);
+                DiffEqualErrorCount = msg.Get<byte>(1);
+                DiffLessErrorNode = msg.Get<byte>(2);
+                DiffLessErrorCount = msg.Get<byte>(3);
             }
             else if (msg.Tag == 5)
             {
                 SentMessages = msg.Get<UInt32>(0);
                 ReceivedMessages = msg.Get<UInt32>(1);
-                tagCount++;
-            }
-
-            if (Complete)
-            {
+                Complete = true;
                 CompletedOn = DateTime.Now;
             }
+
             return true;
         }
 
         public void Clear()
         {
-            tagCount = 0;
-            MaxDiffNode = 0;
+            Complete = false;
         }
 
         public override string ToString()
@@ -170,11 +163,12 @@ public class CANTestService : CANBusService<CANTestService>
                     {
                         reportData[eargs.NodeID] = new ReportData(eargs.NodeID);
                     }
+                    //Console.WriteLine("Message from {0} with tag {1}", eargs.NodeID, msg.Tag);
                     var rd = reportData[eargs.NodeID];
                     rd.Read(msg);
                     if (rd.Complete)
                     {
-                        Console.WriteLine(rd.ToString("s"));
+                        Console.WriteLine(rd.ToString());
                         reportData.Remove(rd.NodeID);
                         log.Add(rd);
                     }
