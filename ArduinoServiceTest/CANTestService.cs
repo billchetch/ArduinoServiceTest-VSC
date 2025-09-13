@@ -22,16 +22,33 @@ public class CANTestService : CANBusService<CANTestService>
     {
         public byte NodeID = 0;
 
+        //Tag 1
         byte MaxDiffNode = 0;
-        byte MaxDiff = 0;
+        UInt32 MaxDiff = 0;
+
+        //Tag 2
         byte MaxIdleNode = 0;
         UInt32 MaxIdle = 0;
 
-        byte DiffErrorNode = 0;
-        byte DiffError = 0;
-        byte LoopTime = 0;
-        UInt32 MaxLoopTime = 0;
+        //Tag 3
+        byte TXErrorCount = 0;
+        byte RXErrorCount = 0;
+        byte MsgErrorCount = 0;
 
+        //Tag 4
+        /*
+        msg->add(diffEqualErrorNode);
+        msg->add(diffEqualError);
+        msg->add(diffLessErrorNode);
+        msg->add(diffLessError);
+        */
+        byte DiffEqualErrorNode = 0;
+        byte DiffEqualErrorCount = 0;
+
+        byte DiffLessErrorNode = 0;
+        byte DiffLessErrorCount = 0;
+
+        //Tag 5
         UInt32 SentMessages = 0;
         UInt32 ReceivedMessages = 0;
 
@@ -39,7 +56,7 @@ public class CANTestService : CANBusService<CANTestService>
 
         public DateTime CompletedOn;
 
-        public bool Complete => tagCount == 3;
+        public bool Complete => tagCount == 6;
 
         public ReportData(byte nodeID)
         {
@@ -53,24 +70,32 @@ public class CANTestService : CANBusService<CANTestService>
             if (msg.Tag == 1)
             {
                 MaxDiffNode = msg.Get<byte>(0);
-                MaxDiff = msg.Get<byte>(1);
-                MaxIdleNode = msg.Get<byte>(2);
-                MaxIdle = msg.Get<UInt32>(3);
+                MaxDiff = msg.Get<UInt32>(1);
                 tagCount++;
             }
             else if (msg.Tag == 2)
             {
-                DiffErrorNode = msg.Get<byte>(0);
-                DiffError = msg.Get<byte>(1);
-                LoopTime = msg.Get<byte>(2);
-                MaxLoopTime = msg.Get<UInt32>(3);
-
+                MaxIdleNode = msg.Get<byte>(0);
+                MaxIdle = msg.Get<UInt32>(1);
                 tagCount++;
             }
             else if (msg.Tag == 3)
             {
+                TXErrorCount = msg.Get<byte>(0);
+                RXErrorCount = msg.Get<byte>(1);
+                MsgErrorCount = msg.Get<byte>(2);
+                tagCount++;
+            }
+            else if (msg.Tag == 4)
+            {
+
+                tagCount++;
+            }
+            else if (msg.Tag == 5)
+            {
                 SentMessages = msg.Get<UInt32>(0);
                 ReceivedMessages = msg.Get<UInt32>(1);
+                tagCount++;
             }
 
             if (Complete)
@@ -95,9 +120,11 @@ public class CANTestService : CANBusService<CANTestService>
             sb.AppendLine();
             sb.AppendFormat(" - MaxIdle: Node {0} -> {1}", MaxIdleNode, MaxIdle);
             sb.AppendLine();
-            sb.AppendFormat(" - DiffError: Node {0} -> {1}", DiffErrorNode, DiffError);
+            sb.AppendFormat(" - Errors TX/RX/MSG: {0} {1} {2}", TXErrorCount, RXErrorCount, MsgErrorCount);
             sb.AppendLine();
-            sb.AppendFormat(" - Loop: Last={0} Max={1}", LoopTime, MaxLoopTime);
+            sb.AppendFormat(" - DiffEqualError: Node {0} -> {1}", DiffEqualErrorNode, DiffEqualErrorCount);
+            sb.AppendLine();
+            sb.AppendFormat(" - DiffLessError: Node {0} -> {1}", DiffLessErrorNode, DiffLessErrorCount);
             sb.AppendLine();
             sb.AppendFormat(" - Sent/Received: {0} {1}", SentMessages, ReceivedMessages);
             sb.AppendLine();
@@ -147,7 +174,7 @@ public class CANTestService : CANBusService<CANTestService>
                     rd.Read(msg);
                     if (rd.Complete)
                     {
-                        //Console.WriteLine(rd.ToString("s"));
+                        Console.WriteLine(rd.ToString("s"));
                         reportData.Remove(rd.NodeID);
                         log.Add(rd);
                     }
