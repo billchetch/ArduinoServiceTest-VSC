@@ -12,6 +12,9 @@ namespace ArduinoServiceTest;
 public class CANTestService : CANBusService<CANTestService>
 {
     public const String COMMAND_SHOW_LOG = "show-log";
+    public const String COMMAND_PAUSE = "pause";
+
+    public const String COMMAND_RESUME = "resume";
 
     public const int REMOTE_NODES = 3;
 
@@ -172,6 +175,8 @@ public class CANTestService : CANBusService<CANTestService>
     protected override void AddCommands()
     {
         AddCommand(COMMAND_SHOW_LOG, "Show <n?> items from log, if no number is given will show last item");
+        AddCommand(COMMAND_PAUSE, "Pause the current test");
+        AddCommand(COMMAND_RESUME, "Resume the current test");
         base.AddCommands();
     }
 
@@ -188,6 +193,14 @@ public class CANTestService : CANBusService<CANTestService>
                     c++;
                     if (c == n) break;
                 }
+                return true;
+
+            case COMMAND_PAUSE:
+                BusMonitor.MCPNode.SendCommand(ArduinoDevice.DeviceCommand.PAUSE);
+                return true;
+
+            case COMMAND_RESUME:
+                BusMonitor.MCPNode.SendCommand(ArduinoDevice.DeviceCommand.RESUME);
                 return true;
 
             default:
