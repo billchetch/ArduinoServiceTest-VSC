@@ -171,7 +171,7 @@ public class CANTestService : CANBusService<CANTestService>
                     rd.Read(msg);
                     if (rd.Complete)
                     {
-                        Console.WriteLine(rd.ToString());
+                        //Console.WriteLine(rd.ToString());
                         reportData.Remove(rd.NodeID);
                         log.Add(rd);
                     }
