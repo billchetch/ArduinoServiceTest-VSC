@@ -31,24 +31,20 @@ public class CANTestService : CANBusService<CANTestService>
         UInt32 MaxIdle = 0;
 
         //Tag 3
+        byte MinIdleNode = 0;
+        UInt32 MinIdle = 0;
+
+        //Tag 4
         byte TXErrorCount = 0;
         byte RXErrorCount = 0;
         byte MsgErrorCount = 0;
 
-        //Tag 4
-        /*
-        msg->add(diffEqualErrorNode);
-        msg->add(diffEqualError);
-        msg->add(diffLessErrorNode);
-        msg->add(diffLessError);
-        */
-        byte DiffEqualErrorNode = 0;
+        //Tag 5
         byte DiffEqualErrorCount = 0;
 
-        byte DiffLessErrorNode = 0;
         byte DiffLessErrorCount = 0;
 
-        //Tag 5
+        //Tag 6
         UInt32 SentMessages = 0;
         UInt32 ReceivedMessages = 0;
 
@@ -77,21 +73,26 @@ public class CANTestService : CANBusService<CANTestService>
             }
             else if (msg.Tag == 3)
             {
+                MinIdleNode = msg.Get<byte>(0);
+                MinIdle = msg.Get<UInt32>(1);
+            }
+            else if (msg.Tag == 4)
+            {
                 TXErrorCount = msg.Get<byte>(0);
                 RXErrorCount = msg.Get<byte>(1);
                 MsgErrorCount = msg.Get<byte>(2);
             }
-            else if (msg.Tag == 4)
-            {
-                DiffEqualErrorNode = msg.Get<byte>(0);
-                DiffEqualErrorCount = msg.Get<byte>(1);
-                DiffLessErrorNode = msg.Get<byte>(2);
-                DiffLessErrorCount = msg.Get<byte>(3);
-            }
             else if (msg.Tag == 5)
+            {
+                DiffEqualErrorCount = msg.Get<byte>(0);
+                DiffLessErrorCount = msg.Get<byte>(1);
+            }
+            else if (msg.Tag == 6)
             {
                 SentMessages = msg.Get<UInt32>(0);
                 ReceivedMessages = msg.Get<UInt32>(1);
+
+                //Here we are complete
                 Complete = true;
                 CompletedOn = DateTime.Now;
             }
@@ -113,11 +114,13 @@ public class CANTestService : CANBusService<CANTestService>
             sb.AppendLine();
             sb.AppendFormat(" - MaxIdle: Node {0} -> {1}", MaxIdleNode, MaxIdle);
             sb.AppendLine();
+            sb.AppendFormat(" - MinIdle: Node {0} -> {1}", MinIdleNode, MinIdle);
+            sb.AppendLine();
             sb.AppendFormat(" - Errors TX/RX/MSG: {0} {1} {2}", TXErrorCount, RXErrorCount, MsgErrorCount);
             sb.AppendLine();
-            sb.AppendFormat(" - DiffEqualError: Node {0} -> {1}", DiffEqualErrorNode, DiffEqualErrorCount);
+            sb.AppendFormat(" - DiffEqualError: {0}", DiffEqualErrorCount);
             sb.AppendLine();
-            sb.AppendFormat(" - DiffLessError: Node {0} -> {1}", DiffLessErrorNode, DiffLessErrorCount);
+            sb.AppendFormat(" - DiffLessError: {0}", DiffLessErrorCount);
             sb.AppendLine();
             sb.AppendFormat(" - Sent/Received: {0} {1}", SentMessages, ReceivedMessages);
             sb.AppendLine();
