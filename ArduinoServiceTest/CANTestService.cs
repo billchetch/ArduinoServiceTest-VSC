@@ -337,15 +337,16 @@ public class CANTestService : CANBusService<CANTestService>
                 {
                     recvMessageData[eargs.NodeID] = new MessageData(eargs.NodeID);
                 }
-                var messageData = recvMessageData[eargs.NodeID];
-                messageData.Read(msg);
+                var md = recvMessageData[eargs.NodeID];
+                md.Read(msg);
 
+                messageData.Add(new MessageData(md));
                 //Console.WriteLine(recvMessageData[eargs.NodeID].ToString());
-                if (!messageData.IsOK)
+                if (!md.IsOK)
                 {
-                    if (!anomalies.ContainsKey(messageData.ReadStatus))
+                    if (!anomalies.ContainsKey(md.ReadStatus))
                     {
-                        anomalies[messageData.ReadStatus] = new DataAnomaly(eargs, new MessageData(messageData));
+                        anomalies[md.ReadStatus] = new DataAnomaly(eargs, new MessageData(md));
                     }
                     //Console.WriteLine(anomalies[messageData.ReadStatus].ToString());
                 }
