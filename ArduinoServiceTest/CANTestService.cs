@@ -18,6 +18,8 @@ public class CANTestService : CANBusService<CANTestService>
 
     public const String COMMAND_SHOW_ANOMALIES = "show-anomalies";
 
+    public const String COMMAND_SHOW_MESSAGE_DATA = "show-md";
+
     public const int REMOTE_NODES = 3;
 
     public class ReportData
@@ -255,6 +257,8 @@ public class CANTestService : CANBusService<CANTestService>
     Dictionary<byte, MessageData> recvMessageData = new Dictionary<byte, MessageData>();
 
     List<MessageData> anomalies = new List<MessageData>();
+
+    RingBuffer<MessageData> messageData = new RingBuffer<MessageData>(100, true);
     
     public CANTestService(ILogger<CANTestService> Logger) : base(Logger)
     {
@@ -297,7 +301,8 @@ public class CANTestService : CANBusService<CANTestService>
                 }
                 recvMessageData[eargs.NodeID].Read(msg);
 
-                Console.WriteLine(recvMessageData[eargs.NodeID].ToString());
+                //Console.WriteLine(recvMessageData[eargs.NodeID].ToString());
+                messageData.Add(recvMessageData[eargs.NodeID]);
                 if (!recvMessageData[eargs.NodeID].IsOK)
                 {
                     anomalies.Add(new MessageData(recvMessageData[eargs.NodeID]));
@@ -346,12 +351,21 @@ public class CANTestService : CANBusService<CANTestService>
                 }
                 return true;
 
+            case COMMAND_SHOW_MESSAGE_DATA:
+                n = arguments.Count > 0 ? System.Convert.ToInt32(arguments[0].ToString()) : 1;
+                c = 0;
+                foreach (var md in messageData)
+                {
+                    response.AddValue("M" + c, md.ToString());
+                }
+                return true;
+
             case COMMAND_SHOW_ANOMALIES:
                 n = arguments.Count > 0 ? System.Convert.ToInt32(arguments[0].ToString()) : 1;
                 c = 0;
-                foreach (var ad in COMMAND_SHOW_ANOMALIES)
+                foreach (var ad in anomalies)
                 {
-                    response.AddValue("E" + c, ad.ToString());
+                    response.AddValue("A" + c, ad.ToString());
                     c++;
                     if (c == n) break;
                 }
