@@ -3,9 +3,11 @@ using System.Text;
 using Chetch.Arduino;
 using Chetch.Arduino.Boards;
 using Chetch.Arduino.Devices;
+using Chetch.Arduino.Devices.Comms;
 using Chetch.Arduino.Services;
 using Chetch.Messaging;
 using Chetch.Utilities;
+using XmppDotNet.Xmpp.Avatar;
 
 namespace ArduinoServiceTest;
 
@@ -16,7 +18,9 @@ public class CANTestService : CANBusService<CANTestService>
 
     public const String COMMAND_RESUME = "resume";
 
-    public const String COMMAND_SHOW_ANOMALIES = "show-anomalies";
+    public const String COMMAND_SHOW_ANOMALIES = "show-ans";
+
+    public const String COMMAND_SHOW_ANOMALY = "show-an";
 
     public const String COMMAND_SHOW_MESSAGE_DATA = "show-md";
 
@@ -249,6 +253,40 @@ public class CANTestService : CANBusService<CANTestService>
         }
     }
 
+    public class DataAnomaly
+    {
+        public byte NodeID => EventArgs.NodeID;
+
+        MCP2515.BusMessageEventArgs EventArgs;
+        MessageData Data;
+
+        public DataAnomaly(MCP2515.BusMessageEventArgs eargs, MessageData data)
+        {
+            EventArgs = eargs;
+            Data = data;
+        }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendFormat("CAN data for message from node {0}", NodeID);
+            sb.AppendLine();
+            sb.AppendFormat(" - CanID: ", Chetch.Utilities.Convert.ToBitString(EventArgs.CanID.ID));
+            sb.AppendLine();
+            sb.AppendFormat(" - CanDLC: ", EventArgs.CanDLC);
+            sb.AppendLine();
+            sb.AppendLine(" - CanData: ");
+            for(int i = 0; i < EventArgs.CanData.Count; i++){
+                sb.AppendFormat(" -- {0}: {1}", i, Chetch.Utilities.Convert.ToBitString(EventArgs.CanData[i]));
+                sb.AppendLine();
+            }
+            sb.AppendLine();
+            sb.Append(Data.ToString());
+
+            return sb.ToString();
+        }
+    }
+
     public CANBusMonitor BusMonitor { get; } //For easy access
 
     RingBuffer<ReportData> log = new RingBuffer<ReportData>(100, true);
@@ -256,7 +294,7 @@ public class CANTestService : CANBusService<CANTestService>
 
     Dictionary<byte, MessageData> recvMessageData = new Dictionary<byte, MessageData>();
 
-    List<MessageData> anomalies = new List<MessageData>();
+    Dictionary<MessageData.Status, DataAnomaly> anomalies = new Dictionary<MessageData.Status, DataAnomaly>();
 
     RingBuffer<MessageData> messageData = new RingBuffer<MessageData>(100, true);
     
@@ -299,13 +337,17 @@ public class CANTestService : CANBusService<CANTestService>
                 {
                     recvMessageData[eargs.NodeID] = new MessageData(eargs.NodeID);
                 }
-                recvMessageData[eargs.NodeID].Read(msg);
+                var messageData = recvMessageData[eargs.NodeID];
+                messageData.Read(msg);
 
                 //Console.WriteLine(recvMessageData[eargs.NodeID].ToString());
-                messageData.Add(recvMessageData[eargs.NodeID]);
-                if (!recvMessageData[eargs.NodeID].IsOK)
+                if (!messageData.IsOK)
                 {
-                    anomalies.Add(new MessageData(recvMessageData[eargs.NodeID]));
+                    if (!anomalies.ContainsKey(messageData.ReadStatus))
+                    {
+                        anomalies[messageData.ReadStatus] = new DataAnomaly(eargs, new MessageData(messageData));
+                    }
+                    Console.WriteLine(anomalies[messageData.ReadStatus].ToString());
                 }
             }
         };
@@ -327,6 +369,7 @@ public class CANTestService : CANBusService<CANTestService>
     {
         AddCommand(COMMAND_SHOW_LOG, "Show <n?> items from log, if no number is given will show last item");
         AddCommand(COMMAND_SHOW_ANOMALIES, "Show <n?> last message data anomalises");
+        AddCommand(COMMAND_SHOW_ANOMALY, "Show anomaly with <id>");
         AddCommand(COMMAND_SHOW_MESSAGE_DATA, "Show <n?> last messages");
         AddCommand(COMMAND_PAUSE, "Pause the current test");
         AddCommand(COMMAND_RESUME, "Resume the current test");
@@ -366,12 +409,16 @@ public class CANTestService : CANBusService<CANTestService>
             case COMMAND_SHOW_ANOMALIES:
                 n = arguments.Count > 0 ? System.Convert.ToInt32(arguments[0].ToString()) : 1;
                 c = 0;
-                foreach (var ad in anomalies)
+                foreach (var ad in anomalies.Values)
                 {
                     response.AddValue("A" + c, ad.ToString());
                     c++;
                     if (c == n) break;
                 }
+                return true;
+
+            case COMMAND_SHOW_ANOMALY:
+                
                 return true;
 
             case COMMAND_PAUSE:
