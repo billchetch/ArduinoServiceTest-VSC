@@ -38,10 +38,13 @@ public class CANTestService : CANBusService<CANTestService>
         byte TXErrorCount = 0;
         byte RXErrorCount = 0;
         byte MsgErrorCount = 0;
+        byte SendFails = 0;
 
         //Tag 5
         byte DiffEqualErrorCount = 0;
-
+        byte DiffEqualRepeatErrorCount = 0;
+        byte DiffEqualResentErrorCount = 0;
+        byte DiffEqualUnknownErrorCount = 0;
         byte DiffLessErrorCount = 0;
 
         //Tag 6
@@ -81,11 +84,14 @@ public class CANTestService : CANBusService<CANTestService>
                 TXErrorCount = msg.Get<byte>(0);
                 RXErrorCount = msg.Get<byte>(1);
                 MsgErrorCount = msg.Get<byte>(2);
+                SendFails = msg.Get<byte>(3);
             }
             else if (msg.Tag == 5)
             {
-                DiffEqualErrorCount = msg.Get<byte>(0);
-                DiffLessErrorCount = msg.Get<byte>(1);
+                DiffEqualRepeatErrorCount = msg.Get<byte>(0);
+                DiffEqualResentErrorCount = msg.Get<byte>(1);
+                DiffEqualUnknownErrorCount = msg.Get<byte>(2);
+                DiffLessErrorCount = msg.Get<byte>(3);
             }
             else if (msg.Tag == 6)
             {
@@ -118,7 +124,11 @@ public class CANTestService : CANBusService<CANTestService>
             sb.AppendLine();
             sb.AppendFormat(" - Errors TX/RX/MSG: {0} {1} {2}", TXErrorCount, RXErrorCount, MsgErrorCount);
             sb.AppendLine();
-            sb.AppendFormat(" - DiffEqualError: {0}", DiffEqualErrorCount);
+            sb.AppendFormat(" - DiffEqualRepeatError: {0}", DiffEqualRepeatErrorCount);
+            sb.AppendLine();
+            sb.AppendFormat(" - DiffEqualResentError: {0}", DiffEqualResentErrorCount);
+            sb.AppendLine();
+            sb.AppendFormat(" - DiffEqualUnknownError: {0}", DiffEqualUnknownErrorCount);
             sb.AppendLine();
             sb.AppendFormat(" - DiffLessError: {0}", DiffLessErrorCount);
             sb.AppendLine();
