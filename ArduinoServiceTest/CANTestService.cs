@@ -390,6 +390,7 @@ public class CANTestService : CANBusService<CANTestService>
         StatusDetails["MasterNode"] = "Todo";
         StatusDetails["Log"] = String.Format("Contains {0} entries", log.Count);
         StatusDetails["Anomalies"] = String.Format("Contains {0} items", anomalies.Count);
+        StatusDetails["MessageData"] = String.Format("Contains {0} items", messageData.Count);
         base.PopulateStatusResponse(response);
     }
     #endregion
