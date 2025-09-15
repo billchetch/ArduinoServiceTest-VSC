@@ -327,6 +327,7 @@ public class CANTestService : CANBusService<CANTestService>
     {
         AddCommand(COMMAND_SHOW_LOG, "Show <n?> items from log, if no number is given will show last item");
         AddCommand(COMMAND_SHOW_ANOMALIES, "Show <n?> last message data anomalises");
+        AddCommand(COMMAND_SHOW_MESSAGE_DATA, "Show <n?> last messages");
         AddCommand(COMMAND_PAUSE, "Pause the current test");
         AddCommand(COMMAND_RESUME, "Resume the current test");
 
