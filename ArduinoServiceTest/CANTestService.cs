@@ -271,9 +271,9 @@ public class CANTestService : CANBusService<CANTestService>
             StringBuilder sb = new StringBuilder();
             sb.AppendFormat("CAN data for message from node {0}", NodeID);
             sb.AppendLine();
-            sb.AppendFormat(" - CanID: ", Chetch.Utilities.Convert.ToBitString(EventArgs.CanID.ID));
+            sb.AppendFormat(" - CanID: {0}", Chetch.Utilities.Convert.ToBitString(EventArgs.CanID.ID));
             sb.AppendLine();
-            sb.AppendFormat(" - CanDLC: ", EventArgs.CanDLC);
+            sb.AppendFormat(" - CanDLC: {0}", EventArgs.CanDLC);
             sb.AppendLine();
             sb.AppendLine(" - CanData: ");
             for(int i = 0; i < EventArgs.CanData.Count; i++){
@@ -347,7 +347,7 @@ public class CANTestService : CANBusService<CANTestService>
                     {
                         anomalies[messageData.ReadStatus] = new DataAnomaly(eargs, new MessageData(messageData));
                     }
-                    Console.WriteLine(anomalies[messageData.ReadStatus].ToString());
+                    //Console.WriteLine(anomalies[messageData.ReadStatus].ToString());
                 }
             }
         };
