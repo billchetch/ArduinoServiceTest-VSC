@@ -358,6 +358,8 @@ public class CANTestService : CANBusService<CANTestService>
                 foreach (var md in messageData)
                 {
                     response.AddValue("M" + c, md.ToString());
+                    c++;
+                    if (c == n) break;
                 }
                 return true;
 
