@@ -24,6 +24,8 @@ public class CANTestService : CANBusService<CANTestService>
 
     public const String COMMAND_SHOW_MESSAGE_DATA = "show-md";
 
+    public const String COMMAND_SHOW_MESSAGE_COUNTS = "show-counts";
+
     public const int REMOTE_NODES = 3;
 
     public class ReportData
@@ -298,6 +300,7 @@ public class CANTestService : CANBusService<CANTestService>
     Dictionary<byte, ReportData> reportData = new Dictionary<byte, ReportData>();
 
     Dictionary<byte, MessageData> recvMessageData = new Dictionary<byte, MessageData>();
+    Dictionary<byte, UInt32> recvMessageCounts = new Dictionary<byte, UInt32>();
 
     Dictionary<MessageData.Status, DataAnomaly> anomalies = new Dictionary<MessageData.Status, DataAnomaly>();
 
@@ -341,7 +344,9 @@ public class CANTestService : CANBusService<CANTestService>
                 if (!recvMessageData.ContainsKey(eargs.NodeID))
                 {
                     recvMessageData[eargs.NodeID] = new MessageData(eargs.NodeID);
+                    recvMessageCounts[eargs.NodeID] = 0;
                 }
+                recvMessageCounts[eargs.NodeID]++;
                 var md = recvMessageData[eargs.NodeID];
                 md.Read(msg);
 
@@ -383,6 +388,7 @@ public class CANTestService : CANBusService<CANTestService>
         AddCommand(COMMAND_SHOW_MESSAGE_DATA, "Show <n?> last messages");
         AddCommand(COMMAND_PAUSE, "Pause the current test");
         AddCommand(COMMAND_RESUME, "Resume the current test");
+        AddCommand(COMMAND_SHOW_MESSAGE_COUNTS, "Show received message counts");
 
         base.AddCommands();
     }
@@ -414,6 +420,16 @@ public class CANTestService : CANBusService<CANTestService>
                     c++;
                     if (c == n) break;
                 }
+                return true;
+
+            case COMMAND_SHOW_MESSAGE_COUNTS:
+                StringBuilder sb = new StringBuilder();
+                foreach (var kv in recvMessageCounts)
+                {
+                    sb.AppendFormat("N{0}={1}", kv.Key, kv.Value);
+                    sb.AppendLine();
+                }
+                response.AddValue("MessageCounts", sb.ToString());
                 return true;
 
             case COMMAND_SHOW_ANOMALIES:
