@@ -257,6 +257,8 @@ public class CANTestService : CANBusService<CANTestService>
     {
         public byte NodeID => EventArgs.NodeID;
 
+        public int Count = 0;
+
         MCP2515.BusMessageEventArgs EventArgs;
         MessageData Data;
 
@@ -264,6 +266,7 @@ public class CANTestService : CANBusService<CANTestService>
         {
             EventArgs = eargs;
             Data = data;
+            Count = 1;
         }
 
         public override string ToString()
@@ -282,6 +285,8 @@ public class CANTestService : CANBusService<CANTestService>
             }
             sb.AppendLine();
             sb.Append(Data.ToString());
+            sb.AppendLine();
+            sb.AppendFormat("Count: {0}", Count);
 
             return sb.ToString();
         }
@@ -347,6 +352,10 @@ public class CANTestService : CANBusService<CANTestService>
                     if (!anomalies.ContainsKey(md.ReadStatus))
                     {
                         anomalies[md.ReadStatus] = new DataAnomaly(eargs, new MessageData(md));
+                    }
+                    else
+                    {
+                        anomalies[md.ReadStatus].Count++;
                     }
                     //Console.WriteLine(anomalies[messageData.ReadStatus].ToString());
                 }
