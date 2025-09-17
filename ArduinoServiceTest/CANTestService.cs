@@ -28,6 +28,10 @@ public class CANTestService : CANBusService<CANTestService>
 
     public const String COMMAND_SHOW_UNEXPECTED_DATA = "show-unx";
 
+    public const String COMMAND_SHOW_STATUS_FLAG_CHANGES = "show-sfg";
+
+    public const String COMMAND_SHOW_ERROR_FLAG_CHANGES = "show-efg";
+
     public const int REMOTE_NODES = 3;
 
     public class ReportData
@@ -185,6 +189,11 @@ public class CANTestService : CANBusService<CANTestService>
         public bool IsOK => ReadStatus == Status.OK;
 
         public byte NodeID = 0;
+
+        public byte Sender = 0;
+
+        public byte Tag = 0;
+
         public UInt32 Value = 0;
         public UInt32 Time = 0; //time in ms that it was sent
 
@@ -204,11 +213,15 @@ public class CANTestService : CANBusService<CANTestService>
             NewValue = md.NewValue;
             NewTime = md.NewTime;
             ReadStatus = md.ReadStatus;
+            Sender = md.Sender;
+            Tag = md.Tag;
         }
 
         public void Read(ArduinoMessage msg)
         {
             ReadStatus = Status.NOT_SET;
+            Sender = msg.Sender;
+            Tag = msg.Tag;
 
             NewValue = msg.Get<UInt32>(0);
             NewTime = msg.Get<UInt32>(1);
@@ -260,6 +273,8 @@ public class CANTestService : CANBusService<CANTestService>
             StringBuilder sb = new StringBuilder();
             sb.AppendFormat("Message Data for Node {0} status {1}", NodeID, ReadStatus);
             sb.AppendLine();
+            sb.AppendFormat(" - Sender/Tag: {0}/{1}", Sender, Tag);
+            sb.AppendLine();
             sb.AppendFormat(" - Value: {0} {1}", Value, NewValue);
             sb.AppendLine();
             sb.AppendFormat(" - Time: {0} {1}", Time, NewTime);
@@ -302,6 +317,7 @@ public class CANTestService : CANBusService<CANTestService>
             sb.Append(Data.ToString());
             sb.AppendLine();
             sb.AppendFormat("Count: {0}", Count);
+            sb.AppendLine();
 
             return sb.ToString();
         }
@@ -315,7 +331,7 @@ public class CANTestService : CANBusService<CANTestService>
     Dictionary<byte, MessageData> recvMessageData = new Dictionary<byte, MessageData>();
     Dictionary<byte, UInt32> recvMessageCounts = new Dictionary<byte, UInt32>();
 
-    Dictionary<MessageData.Status, DataAnomaly> anomalies = new Dictionary<MessageData.Status, DataAnomaly>();
+    Dictionary<String, DataAnomaly> anomalies = new Dictionary<String, DataAnomaly>();
 
     RingBuffer<MessageData> messageData = new RingBuffer<MessageData>(100, true);
 
@@ -373,13 +389,14 @@ public class CANTestService : CANBusService<CANTestService>
                 //Console.WriteLine(recvMessageData[eargs.NodeID].ToString());
                 if (!md.IsOK)
                 {
-                    if (!anomalies.ContainsKey(md.ReadStatus))
+                    String key = String.Format("N{0}-{1}", eargs.NodeID, md.ReadStatus);
+                    if (!anomalies.ContainsKey(key))
                     {
-                        anomalies[md.ReadStatus] = new DataAnomaly(eargs, new MessageData(md));
+                        anomalies[key] = new DataAnomaly(eargs, new MessageData(md));
                     }
                     else
                     {
-                        anomalies[md.ReadStatus].Count++;
+                        anomalies[key].Count++;
                     }
                     //Console.WriteLine(anomalies[messageData.ReadStatus].ToString());
                 }
@@ -423,6 +440,10 @@ public class CANTestService : CANBusService<CANTestService>
         AddCommand(COMMAND_RESUME, "Resume the current test");
         AddCommand(COMMAND_SHOW_MESSAGE_COUNTS, "Show received message counts");
         AddCommand(COMMAND_SHOW_UNEXPECTED_DATA, "Show list of unexpected data");
+        AddCommand(COMMAND_SHOW_STATUS_FLAG_CHANGES, "Show status flag changes");
+        AddCommand(COMMAND_SHOW_ERROR_FLAG_CHANGES, "Show error flag changes");
+
+        
 
         base.AddCommands();
     }
@@ -488,6 +509,28 @@ public class CANTestService : CANBusService<CANTestService>
                 }
                 return true;
 
+            case COMMAND_SHOW_STATUS_FLAG_CHANGES:
+                n = arguments.Count > 0 ? System.Convert.ToInt32(arguments[0].ToString()) : 1;
+                c = 0;
+                foreach (var fc in statusFlagChanges)
+                {
+                    response.AddValue("SF" + c, String.Format("Value: {0}, Changes: {1}", Chetch.Utilities.Convert.ToBitString(fc.Flags), Chetch.Utilities.Convert.ToBitString(fc.FlagsChanged)));
+                    c++;
+                    if (c == n) break;
+                }
+                return true;
+
+            case COMMAND_SHOW_ERROR_FLAG_CHANGES:
+                n = arguments.Count > 0 ? System.Convert.ToInt32(arguments[0].ToString()) : 1;
+                c = 0;
+                foreach (var fc in errorFlagChanges)
+                {
+                    response.AddValue("EF" + c, String.Format("Value: {0}, Changes: {1}", Chetch.Utilities.Convert.ToBitString(fc.Flags), Chetch.Utilities.Convert.ToBitString(fc.FlagsChanged)));
+                    c++;
+                    if (c == n) break;
+                }
+                return true;
+
             case COMMAND_PAUSE:
                 BusMonitor.MCPNode.SendCommand(ArduinoDevice.DeviceCommand.PAUSE);
                 return true;
@@ -508,6 +551,8 @@ public class CANTestService : CANBusService<CANTestService>
         StatusDetails["Anomalies"] = String.Format("Contains {0} items", anomalies.Count);
         StatusDetails["MessageData"] = String.Format("Contains {0} items", messageData.Count);
         StatusDetails["UnexpectedData"] = String.Format("Contains {0} items", unexpectedData.Count);
+        StatusDetails["StatusFlagChanges"] = String.Format("Contains {0} items", statusFlagChanges.Count);
+        StatusDetails["ErrorFlagChanges"] = String.Format("Contains {0} items", errorFlagChanges.Count);
         base.PopulateStatusResponse(response);
     }
     #endregion
