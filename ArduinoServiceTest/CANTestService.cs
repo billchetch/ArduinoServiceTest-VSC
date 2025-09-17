@@ -26,6 +26,8 @@ public class CANTestService : CANBusService<CANTestService>
 
     public const String COMMAND_SHOW_MESSAGE_COUNTS = "show-counts";
 
+    public const String COMMAND_SHOW_UNEXPECTED_DATA = "show-unx";
+
     public const int REMOTE_NODES = 3;
 
     public class ReportData
@@ -173,7 +175,9 @@ public class CANTestService : CANBusService<CANTestService>
             EQUAL_REPEAT,
             EQUAL_RESENT,
             EQUAL_UNKNOWN,
-            LESS_THAN
+            LESS_THAN,
+
+            TAG_ERROR
         }
 
         public Status ReadStatus = Status.NOT_SET;
@@ -213,7 +217,16 @@ public class CANTestService : CANBusService<CANTestService>
             {
                 Value = NewValue;
                 Time = NewTime;
-                ReadStatus = Status.OK;
+
+                //So value is ok, we check if there is a Tag issue
+                if (msg.Tag == (Value % 8))
+                {
+                    ReadStatus = Status.OK;
+                }
+                else
+                {
+                    ReadStatus = Status.TAG_ERROR;
+                }
             }
             else
             {
@@ -305,7 +318,13 @@ public class CANTestService : CANBusService<CANTestService>
     Dictionary<MessageData.Status, DataAnomaly> anomalies = new Dictionary<MessageData.Status, DataAnomaly>();
 
     RingBuffer<MessageData> messageData = new RingBuffer<MessageData>(100, true);
-    
+
+    List<MCP2515.FlagsChangedEventArgs> statusFlagChanges = new List<MCP2515.FlagsChangedEventArgs>();
+
+    List<MCP2515.FlagsChangedEventArgs> errorFlagChanges = new List<MCP2515.FlagsChangedEventArgs>();
+
+    List<String> unexpectedData = new List<String>();
+
     public CANTestService(ILogger<CANTestService> Logger) : base(Logger)
     {
         BusMonitor = new CANBusMonitor(REMOTE_NODES);
@@ -365,6 +384,20 @@ public class CANTestService : CANBusService<CANTestService>
                     //Console.WriteLine(anomalies[messageData.ReadStatus].ToString());
                 }
             }
+            else if (msg.Type != MessageType.STATUS_RESPONSE)
+            {
+                unexpectedData.Add(String.Format("Message of type {0} not expected", msg.Type));
+            }
+        };
+
+        BusMonitor.MasterNode.StatusFlagsChanged += (sender, eargs) =>
+        {
+            statusFlagChanges.Add(eargs);
+        };
+
+        BusMonitor.MasterNode.ErrorFlagsChanged += (sender, eargs) =>
+        {
+            errorFlagChanges.Add(eargs);
         };
 
         //Add the bus monitor to the service
@@ -389,6 +422,7 @@ public class CANTestService : CANBusService<CANTestService>
         AddCommand(COMMAND_PAUSE, "Pause the current test");
         AddCommand(COMMAND_RESUME, "Resume the current test");
         AddCommand(COMMAND_SHOW_MESSAGE_COUNTS, "Show received message counts");
+        AddCommand(COMMAND_SHOW_UNEXPECTED_DATA, "Show list of unexpected data");
 
         base.AddCommands();
     }
@@ -443,8 +477,15 @@ public class CANTestService : CANBusService<CANTestService>
                 }
                 return true;
 
-            case COMMAND_SHOW_ANOMALY:
-                
+            case COMMAND_SHOW_UNEXPECTED_DATA:
+                n = arguments.Count > 0 ? System.Convert.ToInt32(arguments[0].ToString()) : 1;
+                c = 0;
+                foreach (var unx in unexpectedData)
+                {
+                    response.AddValue("X" + c, unx);
+                    c++;
+                    if (c == n) break;
+                }
                 return true;
 
             case COMMAND_PAUSE:
@@ -466,6 +507,7 @@ public class CANTestService : CANBusService<CANTestService>
         StatusDetails["Log"] = String.Format("Contains {0} entries", log.Count);
         StatusDetails["Anomalies"] = String.Format("Contains {0} items", anomalies.Count);
         StatusDetails["MessageData"] = String.Format("Contains {0} items", messageData.Count);
+        StatusDetails["UnexpectedData"] = String.Format("Contains {0} items", unexpectedData.Count);
         base.PopulateStatusResponse(response);
     }
     #endregion
