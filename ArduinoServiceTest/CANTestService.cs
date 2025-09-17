@@ -384,7 +384,7 @@ public class CANTestService : CANBusService<CANTestService>
                     //Console.WriteLine(anomalies[messageData.ReadStatus].ToString());
                 }
             }
-            else if (msg.Type != MessageType.STATUS_RESPONSE)
+            else if (eargs.Direction == MCP2515.BusMessageDirection.INBOUND && msg.Type != MessageType.STATUS_RESPONSE && msg.Type != MessageType.COMMAND_RESPONSE)
             {
                 unexpectedData.Add(String.Format("Message of type {0} not expected", msg.Type));
             }
