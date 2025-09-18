@@ -8,6 +8,7 @@ using Chetch.Arduino.Services;
 using Chetch.Messaging;
 using Chetch.Utilities;
 using XmppDotNet.Xmpp.Avatar;
+using XmppDotNet.Xmpp.Base;
 
 namespace ArduinoServiceTest;
 
@@ -39,29 +40,30 @@ public class CANTestService : CANBusService<CANTestService>
         public byte NodeID = 0;
 
         //Tag 1
-        byte MaxDiffNode = 0;
-        UInt32 MaxDiff = 0;
+        byte ErrorUnknownSend = 0;
+        byte ErrorFailTX = 0;
+        byte ErrorTXBusy = 0;
+        byte SendFails = 0;
 
         //Tag 2
+        byte ErrorUnknownReceive = 0;
+        byte ErrorReadFail = 0;
+        byte ErrorMessageFormat = 0;
+        byte ErrorDebugAssert = 0;
+
+        //Tag 3
         byte MaxIdleNode = 0;
         UInt32 MaxIdle = 0;
 
-        //Tag 3
+        //Tag 4
         byte MinIdleNode = 0;
         UInt32 MinIdle = 0;
 
-        //Tag 4
-        byte TXErrorCount = 0;
-        byte RXErrorCount = 0;
-        byte MsgErrorCount = 0;
-        byte SendFails = 0;
-
         //Tag 5
-        byte DiffEqualErrorCount = 0;
         byte DiffEqualRepeatErrorCount = 0;
         byte DiffEqualResentErrorCount = 0;
         byte DiffEqualUnknownErrorCount = 0;
-        byte DiffLessErrorCount = 0;
+        byte DiffNotEqualErrorCount = 0;
 
         //Tag 6
         UInt32 SentMessages = 0;
@@ -82,32 +84,34 @@ public class CANTestService : CANBusService<CANTestService>
 
             if (msg.Tag == 1)
             {
-                MaxDiffNode = msg.Get<byte>(0);
-                MaxDiff = msg.Get<UInt32>(1);
+                ErrorUnknownSend = msg.Get<byte>(0);
+                ErrorFailTX = msg.Get<byte>(1);
+                ErrorTXBusy = msg.Get<byte>(2);
+                SendFails = msg.Get<byte>(3);
             }
             else if (msg.Tag == 2)
+            {
+                ErrorUnknownReceive = msg.Get<byte>(0);
+                ErrorReadFail = msg.Get<byte>(1);
+                ErrorMessageFormat = msg.Get<byte>(2);
+                ErrorDebugAssert = msg.Get<byte>(3);
+            }
+            else if (msg.Tag == 3)
             {
                 MaxIdleNode = msg.Get<byte>(0);
                 MaxIdle = msg.Get<UInt32>(1);
             }
-            else if (msg.Tag == 3)
+            else if (msg.Tag == 4)
             {
                 MinIdleNode = msg.Get<byte>(0);
                 MinIdle = msg.Get<UInt32>(1);
-            }
-            else if (msg.Tag == 4)
-            {
-                TXErrorCount = msg.Get<byte>(0);
-                RXErrorCount = msg.Get<byte>(1);
-                MsgErrorCount = msg.Get<byte>(2);
-                SendFails = msg.Get<byte>(3);
             }
             else if (msg.Tag == 5)
             {
                 DiffEqualRepeatErrorCount = msg.Get<byte>(0);
                 DiffEqualResentErrorCount = msg.Get<byte>(1);
                 DiffEqualUnknownErrorCount = msg.Get<byte>(2);
-                DiffLessErrorCount = msg.Get<byte>(3);
+                DiffNotEqualErrorCount = msg.Get<byte>(3);
             }
             else if (msg.Tag == 6)
             {
@@ -132,13 +136,13 @@ public class CANTestService : CANBusService<CANTestService>
             StringBuilder sb = new StringBuilder();
             sb.AppendFormat("Report for Node {0} @ {1}", NodeID, CompletedOn.ToString("s"));
             sb.AppendLine();
-            sb.AppendFormat(" - MaxDiff: Node {0} -> {1}", MaxDiffNode, MaxDiff);
+            sb.AppendFormat(" - Send Errors UKS/TX/BZ/SF: {0} {1} {2} {3}", ErrorUnknownSend, ErrorFailTX, ErrorTXBusy, SendFails);
+            sb.AppendLine();
+            sb.AppendFormat(" - Recv and other Errors UKR/RF/MF/DA: {0} {1} {2} {3}", ErrorUnknownReceive, ErrorReadFail, ErrorMessageFormat, ErrorDebugAssert);
             sb.AppendLine();
             sb.AppendFormat(" - MaxIdle: Node {0} -> {1}", MaxIdleNode, MaxIdle);
             sb.AppendLine();
             sb.AppendFormat(" - MinIdle: Node {0} -> {1}", MinIdleNode, MinIdle);
-            sb.AppendLine();
-            sb.AppendFormat(" - Errors TX/RX/MSG/SF: {0} {1} {2} {3}", TXErrorCount, RXErrorCount, MsgErrorCount, SendFails);
             sb.AppendLine();
             sb.AppendFormat(" - DiffEqualRepeatError: {0}", DiffEqualRepeatErrorCount);
             sb.AppendLine();
@@ -146,7 +150,7 @@ public class CANTestService : CANBusService<CANTestService>
             sb.AppendLine();
             sb.AppendFormat(" - DiffEqualUnknownError: {0}", DiffEqualUnknownErrorCount);
             sb.AppendLine();
-            sb.AppendFormat(" - DiffLessError: {0}", DiffLessErrorCount);
+            sb.AppendFormat(" - DiffNotEqualError: {0}", DiffNotEqualErrorCount);
             sb.AppendLine();
             sb.AppendFormat(" - Sent/Received: {0} {1}", SentMessages, ReceivedMessages);
             sb.AppendLine();
@@ -448,7 +452,7 @@ public class CANTestService : CANBusService<CANTestService>
         base.AddCommands();
     }
 
-    protected override bool HandleCommandReceived(ServiceCommand command, List<object> arguments, Message response)
+    protected override bool HandleCommandReceived(ServiceCommand command, List<object> arguments, Chetch.Messaging.Message response)
     {
         int n;
         int c;
@@ -544,7 +548,7 @@ public class CANTestService : CANBusService<CANTestService>
         }
     }
 
-    protected override void PopulateStatusResponse(Message response)
+    protected override void PopulateStatusResponse(Chetch.Messaging.Message response)
     {
         StatusDetails["MasterNode"] = "Todo";
         StatusDetails["Log"] = String.Format("Contains {0} entries", log.Count);
