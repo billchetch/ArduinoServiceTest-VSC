@@ -380,6 +380,11 @@ public class CANTestService : CANBusService<CANTestService>
             }
             else if (msg.Type == MessageType.DATA)
             {
+                if (BusMonitor.MasterNode.NodeID == eargs.NodeID && eargs.Direction == MCP2515.BusMessageDirection.INBOUND)
+                {
+                    unexpectedData.Add("Message from master node has an INBOUND direction");  
+                }
+
                 if (!recvMessageData.ContainsKey(eargs.NodeID))
                 {
                     recvMessageData[eargs.NodeID] = new MessageData(eargs.NodeID);
