@@ -193,6 +193,7 @@ public class CANTestService : CANBusService<CANTestService>
         public bool IsOK => ReadStatus == Status.OK;
 
         public byte NodeID = 0;
+        public byte Header = 0;
 
         public byte Sender = 0;
 
@@ -212,6 +213,7 @@ public class CANTestService : CANBusService<CANTestService>
         public MessageData(MessageData md)
         {
             NodeID = md.NodeID;
+            Header = md.Header;
             Value = md.Value;
             Time = md.Time;
             NewValue = md.NewValue;
@@ -221,9 +223,13 @@ public class CANTestService : CANBusService<CANTestService>
             Tag = md.Tag;
         }
 
-        public void Read(ArduinoMessage msg)
+        public void Read(MCP2515.BusMessageEventArgs eargs)
         {
+            
+            ArduinoMessage msg = eargs.Message;
+
             ReadStatus = Status.NOT_SET;
+            Header = eargs.CanID.Header;
             Sender = msg.Sender;
             Tag = msg.Tag;
 
@@ -277,6 +283,8 @@ public class CANTestService : CANBusService<CANTestService>
             StringBuilder sb = new StringBuilder();
             sb.AppendFormat("Message Data for Node {0} status {1}", NodeID, ReadStatus);
             sb.AppendLine();
+            sb.AppendFormat(" - Header {0}", Chetch.Utilities.Convert.ToBitString(Header));
+            sb.AppendLine();
             sb.AppendFormat(" - Sender/Tag: {0}/{1}", Sender, Tag);
             sb.AppendLine();
             sb.AppendFormat(" - Value: {0} {1}", Value, NewValue);
@@ -309,6 +317,8 @@ public class CANTestService : CANBusService<CANTestService>
             sb.AppendFormat("CAN data for message from node {0}", NodeID);
             sb.AppendLine();
             sb.AppendFormat(" - CanID: {0}", Chetch.Utilities.Convert.ToBitString(EventArgs.CanID.ID));
+            sb.AppendLine();
+            sb.AppendFormat(" - CanID.Header: {0}", Chetch.Utilities.Convert.ToBitString(EventArgs.CanID.Header));
             sb.AppendLine();
             sb.AppendFormat(" - CanDLC: {0}", EventArgs.CanDLC);
             sb.AppendLine();
@@ -392,7 +402,7 @@ public class CANTestService : CANBusService<CANTestService>
                 }
                 recvMessageCounts[eargs.NodeID]++;
                 var md = recvMessageData[eargs.NodeID];
-                md.Read(msg);
+                md.Read(eargs);
 
                 messageData.Add(new MessageData(md));
                 //Console.WriteLine(recvMessageData[eargs.NodeID].ToString());
