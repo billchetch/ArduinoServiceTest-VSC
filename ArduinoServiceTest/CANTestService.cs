@@ -43,8 +43,7 @@ public class CANTestService : CANBusService<CANTestService>
         byte ErrorUnknownSend = 0;
         byte ErrorFailTX = 0;
         byte ErrorTXBusy = 0;
-        byte SendFails = 0;
-
+        
         //Tag 2
         byte ErrorUnknownReceive = 0;
         byte ErrorReadFail = 0;
@@ -87,7 +86,6 @@ public class CANTestService : CANBusService<CANTestService>
                 ErrorUnknownSend = msg.Get<byte>(0);
                 ErrorFailTX = msg.Get<byte>(1);
                 ErrorTXBusy = msg.Get<byte>(2);
-                SendFails = msg.Get<byte>(3);
             }
             else if (msg.Tag == 2)
             {
@@ -136,7 +134,7 @@ public class CANTestService : CANBusService<CANTestService>
             StringBuilder sb = new StringBuilder();
             sb.AppendFormat("Report for Node {0} @ {1}", NodeID, CompletedOn.ToString("s"));
             sb.AppendLine();
-            sb.AppendFormat(" - Send Errors UKS/TX/BZ/SF: {0} {1} {2} {3}", ErrorUnknownSend, ErrorFailTX, ErrorTXBusy, SendFails);
+            sb.AppendFormat(" - Send Errors UKS/TX/BZ: {0} {1} {2}", ErrorUnknownSend, ErrorFailTX, ErrorTXBusy);
             sb.AppendLine();
             sb.AppendFormat(" - Recv and other Errors UKR/RF/MF/DA: {0} {1} {2} {3}", ErrorUnknownReceive, ErrorReadFail, ErrorMessageFormat, ErrorDebugAssert);
             sb.AppendLine();
