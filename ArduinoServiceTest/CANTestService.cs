@@ -60,6 +60,7 @@ public class CANTestService : CANBusService<CANTestService>
         public byte NodeCausingError = 0;
         byte BitTrace1 = 0;
         byte BitTrace2 = 0;
+        UInt32 CanID = 0;
 
         //Tag 5
         byte DiffEqualRepeatErrorCount = 0;
@@ -70,6 +71,10 @@ public class CANTestService : CANBusService<CANTestService>
         //Tag 6
         UInt32 SentMessages = 0;
         UInt32 ReceivedMessages = 0;
+
+        //Tag 7
+        byte NodeMaxIdle = 0;
+        UInt32 MaxIdle = 0;
 
         public DateTime CompletedOn;
 
@@ -112,6 +117,7 @@ public class CANTestService : CANBusService<CANTestService>
                 NodeCausingError = msg.Get<byte>(0);
                 BitTrace1 = msg.Get<byte>(1);
                 BitTrace2 = msg.Get<byte>(2);
+                CanID = msg.Get<UInt32>(3);
             }
             else if (msg.Tag == 5)
             {
@@ -124,6 +130,11 @@ public class CANTestService : CANBusService<CANTestService>
             {
                 SentMessages = msg.Get<UInt32>(0);
                 ReceivedMessages = msg.Get<UInt32>(1);
+            }
+            else if (msg.Tag == 7)
+            {
+                NodeMaxIdle = msg.Get<byte>(0);
+                MaxIdle = msg.Get<UInt32>(1);
 
                 //Here we are complete
                 Complete = true;
@@ -147,9 +158,9 @@ public class CANTestService : CANBusService<CANTestService>
             sb.AppendLine();
             //sb.AppendFormat(" - Recv and other Errors UKR/RF/MF: {0} {1} {2}", ErrorUnknownReceive, ErrorReadFail, ErrorMessageFormat);
             //sb.AppendLine();
-            sb.AppendFormat(" - UneqalError: Node {0} -> {1} {2} / {3} {4}", NodeCausingError, FirstUnequalXValue, FirstUnequalXTime, FirstUnequalValue, FirstUnequalTime);
+            sb.AppendFormat(" - UnequalError: Node {0} -> {1} {2} / {3} {4}", NodeCausingError, FirstUnequalXValue, FirstUnequalXTime, FirstUnequalValue, FirstUnequalTime);
             sb.AppendLine();
-            sb.AppendFormat(" - BitTraces:  {0} {1}", Chetch.Utilities.Convert.ToBitString(BitTrace1), Chetch.Utilities.Convert.ToBitString(BitTrace2));
+            sb.AppendFormat(" - BitTraces and Can ID: {0} {1} {2}", Chetch.Utilities.Convert.ToBitString(BitTrace1), Chetch.Utilities.Convert.ToBitString(BitTrace2), Chetch.Utilities.Convert.ToBitString(CanID));
             sb.AppendLine();
             sb.AppendFormat(" - DiffEqualRepeatError: {0}", DiffEqualRepeatErrorCount);
             sb.AppendLine();
@@ -160,6 +171,8 @@ public class CANTestService : CANBusService<CANTestService>
             sb.AppendFormat(" - DiffNotEqualError: {0}", DiffNotEqualErrorCount);
             sb.AppendLine();
             sb.AppendFormat(" - Sent/Received: {0} {1}", SentMessages, ReceivedMessages);
+            sb.AppendLine();
+            sb.AppendFormat(" - MaxIdle: {0} {1}", NodeMaxIdle, MaxIdle);
             sb.AppendLine();
 
             return sb.ToString();
