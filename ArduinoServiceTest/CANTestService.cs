@@ -33,7 +33,7 @@ public class CANTestService : CANBusService<CANTestService>
 
     public const String COMMAND_SHOW_ERROR_FLAG_CHANGES = "show-efg";
 
-    public const int REMOTE_NODES = 3; //change this depending on size of bus
+    public const int REMOTE_NODES = 1; //change this depending on size of bus
 
     public class ReportData
     {
@@ -213,10 +213,7 @@ public class CANTestService : CANBusService<CANTestService>
         public bool IsOK => ReadStatus == Status.OK;
 
         public byte NodeID = 0;
-        public byte Header = 0;
-
-        public byte BitTrace = 0;
-
+        
         public byte Sender = 0;
 
         public byte Tag = 0;
@@ -235,8 +232,6 @@ public class CANTestService : CANBusService<CANTestService>
         public MessageData(MessageData md)
         {
             NodeID = md.NodeID;
-            Header = md.Header;
-            BitTrace = md.BitTrace;
             Value = md.Value;
             Time = md.Time;
             NewValue = md.NewValue;
@@ -252,8 +247,6 @@ public class CANTestService : CANBusService<CANTestService>
             ArduinoMessage msg = eargs.Message;
 
             ReadStatus = Status.NOT_SET;
-            Header = eargs.CanID.Header;
-            BitTrace = eargs.BitTrace;
             Sender = msg.Sender;
             Tag = msg.Tag;
             
@@ -304,10 +297,6 @@ public class CANTestService : CANBusService<CANTestService>
             StringBuilder sb = new StringBuilder();
             sb.AppendFormat("Message Data for Node {0} status {1}", NodeID, ReadStatus);
             sb.AppendLine();
-            sb.AppendFormat(" - Header {0}", Chetch.Utilities.Convert.ToBitString(Header));
-            sb.AppendLine();
-            sb.AppendFormat(" - BitTrace {0}", Chetch.Utilities.Convert.ToBitString(BitTrace));
-            sb.AppendLine();
             sb.AppendFormat(" - Sender/Tag: {0}/{1}", Sender, Tag);
             sb.AppendLine();
             sb.AppendFormat(" - Value: {0} {1}", Value, NewValue);
@@ -341,11 +330,7 @@ public class CANTestService : CANBusService<CANTestService>
             sb.AppendLine();
             sb.AppendFormat(" - CanID: {0}", Chetch.Utilities.Convert.ToBitString(EventArgs.CanID.ID));
             sb.AppendLine();
-            sb.AppendFormat(" - CanID.Header: {0}", Chetch.Utilities.Convert.ToBitString(EventArgs.CanID.Header));
-            sb.AppendLine();
             sb.AppendFormat(" - CanDLC: {0}", EventArgs.CanDLC);
-            sb.AppendLine();
-            sb.AppendFormat(" - BitTrace: {0}", Chetch.Utilities.Convert.ToBitString(EventArgs.BitTrace));
             sb.AppendLine();
             sb.AppendLine(" - CanData: ");
             for(int i = 0; i < EventArgs.CanData.Count; i++){
