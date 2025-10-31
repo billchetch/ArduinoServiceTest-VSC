@@ -33,6 +33,8 @@ public class CANTestService : CANBusService<CANTestService>
 
     public const String COMMAND_SHOW_ERROR_FLAG_CHANGES = "show-efg";
 
+    public const String COMMAND_LIST_ERRORS = "list-errors";
+
     public const int REMOTE_NODES = 1; //change this depending on size of bus
 
     public class ReportData
@@ -43,7 +45,9 @@ public class CANTestService : CANBusService<CANTestService>
         byte ErrorUnknownSend = 0;
         byte ErrorFailTX = 0;
         byte ErrorTXBusy = 0;
-        byte ErrorDebugAssert = 0;
+        byte ErrorCRC = 0;
+        byte ErrorStaleMessage = 0;
+        byte ErrorSync = 0;
         
         //Tag 2
         byte ErrorUnknownReceive = 0;
@@ -85,17 +89,22 @@ public class CANTestService : CANBusService<CANTestService>
             NodeID = nodeID;
         }
 
-        public bool Read(ArduinoMessage msg)
+        public bool Read(MCP2515Master.BusMessageEventArgs eargs)
         {
             if (Complete) return false;
 
+            ArduinoMessage msg = eargs.Message;
+
             if (msg.Tag == 1)
             {
+                msg.Populate<byte, byte, byte, byte, byte, byte>(eargs.CanData);
+
                 ErrorUnknownSend = msg.Get<byte>(0);
                 ErrorFailTX = msg.Get<byte>(1);
                 ErrorTXBusy = msg.Get<byte>(2);
-                ErrorDebugAssert = msg.Get<byte>(3);
-
+                ErrorCRC = msg.Get<byte>(3);
+                ErrorStaleMessage = msg.Get<byte>(4);
+                ErrorSync = msg.Get<byte>(5);
             }
             else if (msg.Tag == 2)
             {
@@ -103,17 +112,19 @@ public class CANTestService : CANBusService<CANTestService>
                 ErrorReadFail = msg.Get<byte>(1);
                 ErrorMessageFormat = msg.Get<byte>(2);
                 FirstUnequalXValue = msg.Get<UInt32>(3);*/
-
+                msg.Populate<UInt32, UInt32>(eargs.CanData);
                 FirstUnequalXValue = msg.Get<UInt32>(0);
                 FirstUnequalXTime = msg.Get<UInt32>(1);
             }
             else if (msg.Tag == 3)
             {
+                msg.Populate<UInt32, UInt32>(eargs.CanData);
                 FirstUnequalValue = msg.Get<UInt32>(0);
                 FirstUnequalTime = msg.Get<UInt32>(1);
             }
             else if (msg.Tag == 4)
             {
+                msg.Populate<byte, byte, byte, UInt32>(eargs.CanData);
                 NodeCausingError = msg.Get<byte>(0);
                 BitTrace1 = msg.Get<byte>(1);
                 BitTrace2 = msg.Get<byte>(2);
@@ -121,6 +132,7 @@ public class CANTestService : CANBusService<CANTestService>
             }
             else if (msg.Tag == 5)
             {
+                msg.Populate<byte, byte, byte, byte>(eargs.CanData);
                 DiffEqualRepeatErrorCount = msg.Get<byte>(0);
                 DiffEqualResentErrorCount = msg.Get<byte>(1);
                 DiffEqualUnknownErrorCount = msg.Get<byte>(2);
@@ -128,11 +140,13 @@ public class CANTestService : CANBusService<CANTestService>
             }
             else if (msg.Tag == 6)
             {
+                msg.Populate<UInt32, UInt32>(eargs.CanData);
                 SentMessages = msg.Get<UInt32>(0);
                 ReceivedMessages = msg.Get<UInt32>(1);
             }
             else if (msg.Tag == 7)
             {
+                msg.Populate<byte, UInt32>(eargs.CanData);
                 NodeMaxIdle = msg.Get<byte>(0);
                 MaxIdle = msg.Get<UInt32>(1);
 
@@ -154,7 +168,7 @@ public class CANTestService : CANBusService<CANTestService>
             StringBuilder sb = new StringBuilder();
             sb.AppendFormat("Report for Node {0} @ {1}", NodeID, CompletedOn.ToString("s"));
             sb.AppendLine();
-            sb.AppendFormat(" - Send Errors UKS/TX/BZ/DA: {0} {1} {2} {3}", ErrorUnknownSend, ErrorFailTX, ErrorTXBusy, ErrorDebugAssert);
+            sb.AppendFormat(" - Send Errors UKS/TX/BZ/CRC/SM/SYN: {0} {1} {2} {3} {4} {5}", ErrorUnknownSend, ErrorFailTX, ErrorTXBusy, ErrorCRC, ErrorStaleMessage, ErrorSync);
             sb.AppendLine();
             //sb.AppendFormat(" - Recv and other Errors UKR/RF/MF: {0} {1} {2}", ErrorUnknownReceive, ErrorReadFail, ErrorMessageFormat);
             //sb.AppendLine();
@@ -241,10 +255,12 @@ public class CANTestService : CANBusService<CANTestService>
             Tag = md.Tag;
         }
 
-        public void Read(MCP2515.BusMessageEventArgs eargs)
+        public void Read(MCP2515Master.BusMessageEventArgs eargs)
         {
             
             ArduinoMessage msg = eargs.Message;
+
+            msg.Populate<UInt32, UInt32>(eargs.CanData);
 
             ReadStatus = Status.NOT_SET;
             Sender = msg.Sender;
@@ -313,10 +329,10 @@ public class CANTestService : CANBusService<CANTestService>
 
         public int Count = 0;
 
-        MCP2515.BusMessageEventArgs EventArgs;
+        MCP2515Master.BusMessageEventArgs EventArgs;
         MessageData Data;
 
-        public DataAnomaly(MCP2515.BusMessageEventArgs eargs, MessageData data)
+        public DataAnomaly(MCP2515Master.BusMessageEventArgs eargs, MessageData data)
         {
             EventArgs = eargs;
             Data = data;
@@ -333,7 +349,7 @@ public class CANTestService : CANBusService<CANTestService>
             sb.AppendFormat(" - CanDLC: {0}", EventArgs.CanDLC);
             sb.AppendLine();
             sb.AppendLine(" - CanData: ");
-            for(int i = 0; i < EventArgs.CanData.Count; i++){
+            for(int i = 0; i < EventArgs.CanData.Length; i++){
                 sb.AppendFormat(" -- {0}: {1}", i, Chetch.Utilities.Convert.ToBitString(EventArgs.CanData[i]));
                 sb.AppendLine();
             }
@@ -364,6 +380,7 @@ public class CANTestService : CANBusService<CANTestService>
     List<MCP2515.FlagsChangedEventArgs> errorFlagChanges = new List<MCP2515.FlagsChangedEventArgs>();
 
     List<ReportData> unexpectedReportData = new List<ReportData>();
+    List<ArduinoMessage> errorsReceived = new List<ArduinoMessage>();
 
     public CANTestService(ILogger<CANTestService> Logger) : base(Logger)
     {
@@ -385,7 +402,7 @@ public class CANTestService : CANBusService<CANTestService>
                     }
                     //Console.WriteLine("Message from {0} with tag {1}", eargs.NodeID, msg.Tag);
                     var rd = reportData[eargs.NodeID];
-                    rd.Read(msg);
+                    rd.Read(eargs);
                     if (rd.Complete)
                     {
                         //Console.WriteLine(rd.ToString());
@@ -430,6 +447,10 @@ public class CANTestService : CANBusService<CANTestService>
                     //Console.WriteLine(anomalies[messageData.ReadStatus].ToString());
                 }
             }
+            else if(msg.Type == MessageType.ERROR)
+            {
+                
+            }
         };
 
         BusMonitor.MasterNode.StatusFlagsChanged += (sender, eargs) =>
@@ -467,6 +488,7 @@ public class CANTestService : CANBusService<CANTestService>
         AddCommand(COMMAND_SHOW_UNEXPECTED_DATA, "Show list of unexpected report data");
         AddCommand(COMMAND_SHOW_STATUS_FLAG_CHANGES, "Show status flag changes");
         AddCommand(COMMAND_SHOW_ERROR_FLAG_CHANGES, "Show error flag changes");
+        AddCommand(COMMAND_LIST_ERRORS, "List errors of a certain <error code?>");
         
         base.AddCommands();
     }
@@ -562,6 +584,17 @@ public class CANTestService : CANBusService<CANTestService>
                 BusMonitor.MCPNode.SendCommand(ArduinoDevice.DeviceCommand.RESUME);
                 return true;
 
+            case COMMAND_LIST_ERRORS:
+                MCP2515.MCP2515ErrorCode ec = MCP2515.MCP2515ErrorCode.CRC_ERROR;
+                List<ArduinoMessage> errs = errorsReceived.Where(err => err.Get<MCP2515.MCP2515ErrorCode>(0) == ec).ToList();
+                errs.Reverse();
+                c = 0;
+                foreach(var err in errs)
+                {
+                    response.AddValue("Error" + c, (MCP2515.MCP2515ErrorCode)err.Get<byte>(1));
+                }
+                return true;
+
             default:
                 return base.HandleCommandReceived(command, arguments, response);
         }
@@ -569,11 +602,11 @@ public class CANTestService : CANBusService<CANTestService>
 
     protected override void PopulateStatusResponse(Chetch.Messaging.Message response)
     {
-        StatusDetails["MasterNode"] = "Todo";
         StatusDetails["Log"] = String.Format("Contains {0} entries", log.Count);
         StatusDetails["Anomalies"] = String.Format("Contains {0} items", anomalies.Count);
         StatusDetails["MessageData"] = String.Format("Contains {0} items", messageData.Count);
         StatusDetails["UnexpectedData"] = String.Format("Contains {0} items", unexpectedReportData.Count);
+        StatusDetails["ErrorsReceived"] = String.Format("Contains {0} items", errorsReceived.Count);
         StatusDetails["StatusFlagChanges"] = String.Format("Contains {0} items", statusFlagChanges.Count);
         StatusDetails["ErrorFlagChanges"] = String.Format("Contains {0} items", errorFlagChanges.Count);
         base.PopulateStatusResponse(response);
