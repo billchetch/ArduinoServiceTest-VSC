@@ -577,11 +577,11 @@ public class CANTestService : CANBusService<CANTestService>
                 return true;
 
             case COMMAND_PAUSE:
-                BusMonitor.MCPNode.SendCommand(ArduinoDevice.DeviceCommand.PAUSE);
+                BusMonitor.PauseBus();
                 return true;
 
             case COMMAND_RESUME:
-                BusMonitor.MCPNode.SendCommand(ArduinoDevice.DeviceCommand.RESUME);
+                BusMonitor.ResumeBus();
                 return true;
 
             case COMMAND_LIST_ERRORS:
