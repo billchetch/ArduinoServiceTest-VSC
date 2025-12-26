@@ -35,7 +35,7 @@ public class CANTestService : CANBusService<CANTestService>
 
     public const String COMMAND_LIST_ERRORS = "list-errors";
 
-    public const int REMOTE_NODES = 1; //change this depending on size of bus
+    public const int REMOTE_NODES = 2; //change this depending on size of bus
 
     public class ReportData
     {
