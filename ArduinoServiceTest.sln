@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Arduino", "..\..\Libraries\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChetchXMPP", "..\..\Libraries\ChetchXMPP\ChetchXMPP\ChetchXMPP.csproj", "{A666AF78-7FFC-4D40-B30E-C9088561C870}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Messaging", "..\..\Libraries\Messaging\Messaging\Messaging.csproj", "{687F8B17-1F3A-44DF-96E8-2FD193D568C1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +32,9 @@ Global
 		{A666AF78-7FFC-4D40-B30E-C9088561C870}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A666AF78-7FFC-4D40-B30E-C9088561C870}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A666AF78-7FFC-4D40-B30E-C9088561C870}.Release|Any CPU.Build.0 = Release|Any CPU
+		{687F8B17-1F3A-44DF-96E8-2FD193D568C1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{687F8B17-1F3A-44DF-96E8-2FD193D568C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{687F8B17-1F3A-44DF-96E8-2FD193D568C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{687F8B17-1F3A-44DF-96E8-2FD193D568C1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
