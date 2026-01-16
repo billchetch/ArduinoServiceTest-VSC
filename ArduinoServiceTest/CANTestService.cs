@@ -14,10 +14,6 @@ namespace ArduinoServiceTest;
 
 public class CANTestService : CANBusService<CANTestService>
 {
-    public const String COMMAND_PAUSE = "pause";
-
-    public const String COMMAND_RESUME = "resume";
-
     public const int REMOTE_NODES = 3; //change this depending on size of bus
 
     public CANBusMonitor BusMonitor { get; } //For easy access
@@ -42,8 +38,6 @@ public class CANTestService : CANBusService<CANTestService>
     #region Client issued Command handling and general Messaging
     protected override void AddCommands()
     {
-        AddCommand(COMMAND_PAUSE, "Pause the current test");
-        AddCommand(COMMAND_RESUME, "Resume the current test");
         
         base.AddCommands();
     }
@@ -52,13 +46,7 @@ public class CANTestService : CANBusService<CANTestService>
     {
         switch (command.Command)
         {
-            case COMMAND_PAUSE:
-                BusMonitor.PauseBus();
-                return true;
-
-            case COMMAND_RESUME:
-                BusMonitor.ResumeBus();
-                return true;
+            
             
             default:
                 return base.HandleCommandReceived(command, arguments, response);
