@@ -17,7 +17,8 @@ public class CANTestService : CANBusService<CANTestService>
     public const String COMMAND_START = "start";
     public const String COMMAND_STOP = "stop";
 
-    public const int REMOTE_NODES = 3; //change this depending on size of bus
+    //public const int REMOTE_NODES = 3; //change this depending on size of bus
+    public const int REMOTE_NODES = 6; //change this depending on size of bus
 
     public CANBusMonitor BusMonitor { get; } //For easy access
 
